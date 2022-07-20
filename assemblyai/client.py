@@ -4,6 +4,8 @@ import httpx
 
 from assemblyai.api_endpoints import StreamEndpoint, TranscriptEndpoint, UploadEndpoint
 
+BASE_URL_V2 = "https://api.assemblyai.com/v2/"
+
 class Client:
     """Basic Client for AssemblyAI APIs"""
 
@@ -17,6 +19,7 @@ class Client:
             'authorization': api_key,
             'content-type': 'application/json'
         })
+        self.base_url = BASE_URL_V2
 
         self.transcript = TranscriptEndpoint(self)
         self.upload = UploadEndpoint(self)
@@ -25,6 +28,7 @@ class Client:
 
     def _build_request(self, method: str, path: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None) -> httpx.Request:
         """Build a request object for the client."""
+        # TODO: remove null values, and convert Enum -> str.
         return self.client.build_request(
             method, path, params=query, json=body,
         )
@@ -36,12 +40,12 @@ class Client:
 
     
     def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None) -> Any:
-        """ Sends a JSON-encoded, HTTP request with required authorization.
+        """ Sends a JSON-encoded, HTTP request with required authorization to AssemblyAI api.
         
         Throws:
             httpx.HTTPStatusError: If the response was unsuccessful.
             httpx.TimeoutException: If a timeout occured on the request.
         """
-        request = self._build_request(method, path, query, body)
+        request = self._build_request(method, f"{self.base_url}{path}", query, body)
         response = self.client.send(request)
         return self._parse_response(response)
