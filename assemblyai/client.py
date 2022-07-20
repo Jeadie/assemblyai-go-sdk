@@ -49,3 +49,9 @@ class Client:
         request = self._build_request(method, f"{self.base_url}{path}", query, body)
         response = self.client.send(request)
         return self._parse_response(response)
+
+    def path_from_full_url(self, full_url: str) -> str:
+        start_index = full_url.find(self.base_url)
+        if start_index == -1:
+            raise ValueError(f"full_url: {full_url} has unexpected based url. Expected {self.base_url}.")
+        return full_url[len(self.base_url):]

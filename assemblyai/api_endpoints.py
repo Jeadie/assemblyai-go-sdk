@@ -1,5 +1,6 @@
 """AssemblyAI API endpoints"""
 
+import json
 from typing import Optional, List, TYPE_CHECKING
 
 from datetime import date
@@ -40,7 +41,7 @@ class TranscriptEndpoint(Endpoint):
         response = self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}/paragraphs", "GET")
         return UtteredWord.schema().loads(response, many=True)
 
-    def all(self, limit: Optional[int] = None, status: Optional[TranscriptStatus] = None, created_on: Optional[date] = None, before_id: Optional[str]=None, after_id: Optional[str]=None, throttled_only: bool = False) -> List[Transcript]:
+    def all(self, limit: Optional[int] = None, status: Optional[TranscriptStatus] = None, created_on: Optional[date] = None, before_id: Optional[str]=None, after_id: Optional[str]=None, throttled_only: bool = False, first_page_only: bool = True) -> List[Transcript]:
         response = self.parent.request(f"{TranscriptEndpoint.PREFIX}", "GET", body = {
             "limit": limit,
             "status": status,
@@ -49,10 +50,37 @@ class TranscriptEndpoint(Endpoint):
             "after_id": after_id,
             "throttled_only": throttled_only
         })
-        return self._parse_all_response(response)
+        result = self._parse_all_response(response)
+
+        next_url = self._all_next_url(response)
+        if not next_url or first_page_only:
+            return result
+
+        while next_url:
+            # Take only url suffix path
+            path = self.parent.path_from_full_url(next_url)
+            response = self.parent.request(path, "GET")
+
+            result.extend(self._parse_all_response(response))
+            next_url = self._all_next_url(response)
+
+        return result
+
+    def _all_next_url(self, response: any) -> Optional[str]:
+        resp_json = json.loads(response)
+        if not resp_json.get("page_details"):
+            return None
+
+        return resp_json["page_details"].get("next_url", None)
 
     def _parse_all_response(self, response: any) -> List[Transcript]:
-        return []
+        resp_json = json.loads(response)
+        if not resp_json.get("transcripts"):
+            return []
+
+        # Convert transcripts back to JSON to use dataclass JSON parsing.
+        raw_transcripts = json.dumps(resp_json.get("transcripts"))
+        return Transcript.schema().loads(raw_transcripts, many=True)
 
     def delete(self, transcript_id: str):
         self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "DELETE")
