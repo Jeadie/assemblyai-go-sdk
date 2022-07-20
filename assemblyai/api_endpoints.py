@@ -41,6 +41,9 @@ class TranscriptEndpoint(Endpoint):
         response = self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}/paragraphs", "GET")
         return UtteredWord.schema().loads(response, many=True)
 
+    def delete(self, transcript_id: str):
+        self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "DELETE")
+
     def all(self, limit: Optional[int] = None, status: Optional[TranscriptStatus] = None, created_on: Optional[date] = None, before_id: Optional[str]=None, after_id: Optional[str]=None, throttled_only: bool = False, first_page_only: bool = True) -> List[Transcript]:
         response = self.parent.request(f"{TranscriptEndpoint.PREFIX}", "GET", body = {
             "limit": limit,
@@ -66,6 +69,7 @@ class TranscriptEndpoint(Endpoint):
 
         return result
 
+
     def _all_next_url(self, response: any) -> Optional[str]:
         resp_json = json.loads(response)
         if not resp_json.get("page_details"):
@@ -81,9 +85,6 @@ class TranscriptEndpoint(Endpoint):
         # Convert transcripts back to JSON to use dataclass JSON parsing.
         raw_transcripts = json.dumps(resp_json.get("transcripts"))
         return Transcript.schema().loads(raw_transcripts, many=True)
-
-    def delete(self, transcript_id: str):
-        self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "DELETE")
 
 class UploadEndpoint(Endpoint):
     """ API Operations related to the model.Upload object.
