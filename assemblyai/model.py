@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json
 from enum import Enum
 from typing import Optional, List
 
@@ -136,6 +137,7 @@ class AutoHighlightResult:
     # TODO: https://www.assemblyai.com/docs/audio-intelligence#detect-important-phrases-and-words
     status: str # "success" | "unavailable"
 
+@dataclass_json
 @dataclass
 class Transcript:
     """ Transcript object.
@@ -143,43 +145,47 @@ class Transcript:
     *[Model Reference](https://www.assemblyai.com/docs/reference#transcript)*
     """
     id: str
-    status: Optional[TranscriptStatus]
-    audio_url: Optional[str]
-    text: Optional[str]
-    confidence: Optional[float]
-    audio_duration: Optional[float]
-    punctuate: bool
-    format_text: bool
-    dual_channel: bool
-    webhook_url: Optional[str]
-    webhook_status_code: Optional[str]
-    audio_start_from: int
-    audio_end_at: int
-    word_boost: List[str]
-    boost_param: Optional[BoostType]
-    filter_profanity: bool
-    redact_pii: bool
-    redact_pii_audio: bool
-    redact_pii_sub: Optional[RedactPiiSub]
-    speaker_labels: bool
-    content_safety: bool
-    iab_categories: bool
-    disfluencies: bool
-    sentiment_analysis: bool
-    auto_chapters: bool
-    entity_detection: bool
-    words: List[UtteredWord]
-    utterances: List[Utterance]
-    auto_highlights_result: List[AutoHighlightResult]
-    redact_pii_policies: List[EntityType]
-    chapters: List[Chapter]
-    sentiment_analysis_results: List[SentimentAnalysisResult]
-    entities: List[DetectedEntity]
-    content_safety_labels: List[ContentSafetyLabel]
-    iab_categories_result: List[IABCategoryResult]
-    custom_spelling: List[CustomSpelling]
+    status: Optional[TranscriptStatus] = None
+    audio_url: Optional[str] = None
+    text: Optional[str] = None
+    confidence: Optional[float] = None
+    audio_duration: Optional[float] = None
+    punctuate: bool = False
+    format_text: bool = False
+    dual_channel: bool = False
+    webhook_url: Optional[str] = None
+    webhook_status_code: Optional[str] = None
+    audio_start_from: Optional[int] = None
+    audio_end_at: Optional[int] = None
+    word_boost: List[str] = field(default_factory=list)
+    boost_param: Optional[BoostType] = None
+    filter_profanity: bool = False
+    redact_pii: bool = False
+    redact_pii_audio: bool = False
+    redact_pii_sub: Optional[RedactPiiSub] = None
+    speaker_labels: bool = False
+    content_safety: bool = False
+    iab_categories: bool = False
+    disfluencies: bool = False
+    sentiment_analysis: bool = False
+    auto_chapters: bool = False
+    entity_detection: bool = False
+    words: List[UtteredWord] = field(default_factory=list)
+    utterances: List[Utterance] = field(default_factory=list)
+    auto_highlights_result: List[AutoHighlightResult] = field(default_factory=list)
+    redact_pii_policies: List[EntityType] = field(default_factory=list)
+    chapters: List[Chapter] = field(default_factory=list)
+    sentiment_analysis_results: List[SentimentAnalysisResult] = field(default_factory=list)
+    entities: List[DetectedEntity] = field(default_factory=list)
+    content_safety_labels: List[ContentSafetyLabel] = field(default_factory=list)
+    iab_categories_result: List[IABCategoryResult] = field(default_factory=list)
+    custom_spelling: List[CustomSpelling] = field(default_factory=list)
 
     language_code: SupportedLanguageCode = SupportedLanguageCode.english_american
+
+    def is_audio_intelligence_ready(self):
+        """Returns True iff audio intelligence from AssemblyAI is ready to be used."""
+        return self.status == TranscriptStatus.completed
 
 @dataclass
 class Upload:
