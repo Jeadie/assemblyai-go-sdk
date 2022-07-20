@@ -1,6 +1,10 @@
 """AssemblyAI API endpoints"""
 
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
+
+from assemblyai.model import Transcript, Upload, UtteredWord
+
+
 if TYPE_CHECKING:
     from assemblyai.client import Client
 
@@ -17,11 +21,35 @@ class TranscriptEndpoint(Endpoint):
         *[Endpoint reference](https://www.assemblyai.com/docs/reference#transcript)*
     """
 
+    def create(self, transcript: Transcript) -> Transcript:
+        return transcript
+
+    def get(self, transcript_id: str) -> Transcript:
+        return Transcript()
+
+    def sentences(self, transcript_id: str) -> List[UtteredWord]:
+        return []
+
+    def paragraphs(self, transcript_id: str) -> List[UtteredWord]:
+        return []
+
+    def all(self) -> List[Transcript]:
+        return []
+
+    def delete(self, transcript_id: str):
+        return 
+
 class UploadEndpoint(Endpoint):
     """ API Operations related to the model.Upload object.
 
         *[Endpoint reference](https://www.assemblyai.com/docs/reference#upload)*
     """
+
+    def upload_bytes(self, content: bytes) -> Upload:
+        pass
+
+    def upload_File(self, filename: str) -> Upload:
+        pass
 
 class StreamEndpoint(Endpoint):
     """ API Operations related to the model.Stream object.
