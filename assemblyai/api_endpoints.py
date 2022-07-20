@@ -27,24 +27,48 @@ class TranscriptEndpoint(Endpoint):
     PREFIX="transcript"
 
     def create(self, transcript: Transcript) -> Transcript:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#create-a-transcript)*
+        """
         return transcript
 
     def get(self, transcript_id: str) -> Transcript:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#get-a-transcript)*
+        """
         response =  self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "GET")
         return Transcript.schema().loads(response)
 
     def sentences(self, transcript_id: str) -> List[UtteredWord]:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#get-all-sentences-of-a-transcript)*
+        """
         response = self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}/sentences", "GET")
         return UtteredWord.schema().loads(response, many=True)
 
     def paragraphs(self, transcript_id: str) -> List[UtteredWord]:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#get-all-paragraphs-of-a-transcript)*
+        """
         response = self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}/paragraphs", "GET")
         return UtteredWord.schema().loads(response, many=True)
 
     def delete(self, transcript_id: str):
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#delete-a-transcript)*
+        """
         self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "DELETE")
 
     def all(self, limit: Optional[int] = None, status: Optional[TranscriptStatus] = None, created_on: Optional[date] = None, before_id: Optional[str]=None, after_id: Optional[str]=None, throttled_only: bool = False, first_page_only: bool = True) -> List[Transcript]:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#get-all-transcripts)*
+        """
         response = self.parent.request(f"{TranscriptEndpoint.PREFIX}", "GET", body = {
             "limit": limit,
             "status": status,
@@ -93,9 +117,17 @@ class UploadEndpoint(Endpoint):
     """
 
     def upload_bytes(self, content: bytes) -> Upload:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#creating-an-upload)*
+        """
         pass
 
     def upload_File(self, filename: str) -> Upload:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#creating-an-upload)*
+        """
         pass
 
 class StreamEndpoint(Endpoint):
@@ -104,4 +136,8 @@ class StreamEndpoint(Endpoint):
         *[Endpoint reference](https://www.assemblyai.com/docs/reference#stream)*
     """
     def stream_raw(self, base64_raw_audio: str, format_text: bool = False, punctuate: bool = False) -> StreamPayload:
+        """
+        
+        *[Reference](https://www.assemblyai.com/docs/reference#stream)*
+        """
         pass
