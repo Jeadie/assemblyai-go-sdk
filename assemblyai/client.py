@@ -24,24 +24,32 @@ class Client:
         self.transcript = TranscriptEndpoint(self)
         self.upload = UploadEndpoint(self)
         self.stream = StreamEndpoint(self)
-        
+
 
     def _build_request(self, method: str, path: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None) -> httpx.Request:
         """Build a request object for the client."""
-        # TODO: remove null values, and convert Enum -> str.
         return self.client.build_request(
-            method, path, params=query, json=body,
+            method, path, params=query, json=self._clean_body(body),
         )
+
+    def _clean_body(self, body: Optional[Dict[Any, Any]]) -> Optional[Dict[Any, Any]]:
+        """Cleans a json body of pythonic values and unnecessary keys."""
+        if not body:
+            return body
+
+        # Remove key-value with null values
+        body_items = filter(lambda x: x[1] is not None, body.items())
+
+        return dict(body_items)
 
     def _parse_response(self, response: httpx.Response) -> Any:
         """Parses the response from a client request. Throws a httpx.HTTPStatusError if an error status code is returned."""
         response.raise_for_status()
         return response.json()
 
-    
     def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None) -> Any:
         """ Sends a JSON-encoded, HTTP request with required authorization to AssemblyAI api.
-        
+
         Throws:
             httpx.HTTPStatusError: If the response was unsuccessful.
             httpx.TimeoutException: If a timeout occured on the request.
