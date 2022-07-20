@@ -188,3 +188,16 @@ class Upload:
     *[Model Reference](https://www.assemblyai.com/docs/reference#upload)*
     """
     upload_url: str
+
+
+@dataclass
+class StreamPayload:
+    """ Payload from stream operations.
+
+    *[Reference](https://www.assemblyai.com/docs/reference#stream)*
+    """
+    id: str
+    status: TranscriptStatus
+    confidence: float
+    text: str
+    words: List[UtteredWord]

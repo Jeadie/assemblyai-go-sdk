@@ -2,7 +2,7 @@
 
 from typing import List, TYPE_CHECKING
 
-from assemblyai.model import Transcript, Upload, UtteredWord
+from assemblyai.model import StreamPayload, Transcript, Upload, UtteredWord
 
 
 if TYPE_CHECKING:
@@ -56,3 +56,5 @@ class StreamEndpoint(Endpoint):
 
         *[Endpoint reference](https://www.assemblyai.com/docs/reference#stream)*
     """
+    def stream_raw(self, base64_raw_audio: str, format_text: bool = False, punctuate: bool = False) -> StreamPayload:
+        pass
