@@ -1,8 +1,11 @@
 """AssemblyAI API endpoints"""
 
-from typing import List, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 
-from assemblyai.model import StreamPayload, Transcript, Upload, UtteredWord
+from datetime import date
+from venv import create
+
+from assemblyai.model import StreamPayload, Transcript, TranscriptStatus, Upload, UtteredWord
 
 
 if TYPE_CHECKING:
@@ -20,24 +23,39 @@ class TranscriptEndpoint(Endpoint):
     
         *[Endpoint reference](https://www.assemblyai.com/docs/reference#transcript)*
     """
+    PREFIX="transcript"
 
     def create(self, transcript: Transcript) -> Transcript:
         return transcript
 
     def get(self, transcript_id: str) -> Transcript:
-        return Transcript()
+        response =  self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "GET")
+        return Transcript.schema().loads(response)
 
     def sentences(self, transcript_id: str) -> List[UtteredWord]:
-        return []
+        response = self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}/sentences", "GET")
+        return UtteredWord.schema().loads(response, many=True)
 
     def paragraphs(self, transcript_id: str) -> List[UtteredWord]:
-        return []
+        response = self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}/paragraphs", "GET")
+        return UtteredWord.schema().loads(response, many=True)
 
-    def all(self) -> List[Transcript]:
+    def all(self, limit: Optional[int] = None, status: Optional[TranscriptStatus] = None, created_on: Optional[date] = None, before_id: Optional[str]=None, after_id: Optional[str]=None, throttled_only: bool = False) -> List[Transcript]:
+        response = self.parent.request(f"{TranscriptEndpoint.PREFIX}", "GET", body = {
+            "limit": limit,
+            "status": status,
+            "created_on": created_on.isoformat() if created_on else None,
+            "before_id": before_id,
+            "after_id": after_id,
+            "throttled_only": throttled_only
+        })
+        return self._parse_all_response(response)
+
+    def _parse_all_response(self, response: any) -> List[Transcript]:
         return []
 
     def delete(self, transcript_id: str):
-        return 
+        self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "DELETE")
 
 class UploadEndpoint(Endpoint):
     """ API Operations related to the model.Upload object.
