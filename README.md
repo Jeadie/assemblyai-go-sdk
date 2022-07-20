@@ -1,2 +1,2 @@
-# assemblyai-go-sdk
-(Un)official AssemblyAI Golang SDK 
+# assemblyai-python-sdk
+(Un)official AssemblyAI Python SDK 
