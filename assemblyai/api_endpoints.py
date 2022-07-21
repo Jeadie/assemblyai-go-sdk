@@ -2,8 +2,9 @@
 
 import json
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
-
 from datetime import date
+
+from httpx import Response
 
 from assemblyai.model import StreamPayload, Transcript, TranscriptStatus, Upload, UtteredWord
 
@@ -33,7 +34,8 @@ class TranscriptEndpoint(Endpoint):
         
         *[Reference](https://www.assemblyai.com/docs/reference#create-a-transcript)*
         """
-        response =  self._handle_request("", "POST", body=transcript.to_json())
+        # TODO: enforce audio_url exists.
+        response = self._handle_request("", "POST", body=transcript.to_json())
         return Transcript.schema().loads(response)
 
     def get(self, transcript_id: str) -> Transcript:
@@ -101,7 +103,11 @@ class TranscriptEndpoint(Endpoint):
 
     def _handle_request(self, operation: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None):
         """Handles sending a request to the transcript endpoints."""
-        return self.parent.request(f"{TranscriptEndpoint.PREFIX}/{operation}", method, body = body, query=query, headers={"content-type": 'application/json'})
+        if operation:
+            url = f"{TranscriptEndpoint.PREFIX}/{operation}"
+        else:
+            url = TranscriptEndpoint.PREFIX
+        return self.parent.request(url, method, body = body, query=query, headers={"content-type": 'application/json'})
 
     def _clean_body(self, body: Optional[Dict[Any, Any]]) -> Optional[Dict[Any, Any]]:
         """Cleans a json body of pythonic values and unnecessary keys."""
@@ -113,25 +119,30 @@ class TranscriptEndpoint(Endpoint):
 
         return dict(body_items)
 
-    def _all_next_url(self, response: any) -> Optional[str]:
+    def _all_next_url(self, response: Response) -> Optional[str]:
         """For a response from self.all(), retrieve the url for the next set of paginated results. 
         
         If None, no more results are present.
         """
-        resp_json = json.loads(response)
-        if not resp_json.get("page_details"):
+        resp_json = response.json()
+        page_details = resp_json.get("page_details")
+        if not page_details:
             return None
 
-        return resp_json["page_details"].get("next_url", None)
+        next_url = page_details.get("next_url", None)
+        current_url = page_details.get("current_url", None)
+        if next_url == current_url:
+            return None
+        return next_url
 
-    def _parse_all_response(self, response: any) -> List[Transcript]:
+    def _parse_all_response(self, response: Response) -> List[Transcript]:
         """For a response from self.all(), parse all transcripts from this response."""
-        resp_json = json.loads(response)
-        if not resp_json.get("transcripts"):
+        if not response.json().get("transcripts"):
             return []
 
         # Convert transcripts back to JSON to use dataclass JSON parsing.
-        raw_transcripts = json.dumps(resp_json.get("transcripts"))
+        raw_transcripts = json.dumps(response.json().get("transcripts"))
+
         return Transcript.schema().loads(raw_transcripts, many=True)
 
 class UploadEndpoint(Endpoint):
@@ -175,9 +186,10 @@ class StreamEndpoint(Endpoint):
 
         *[Endpoint reference](https://www.assemblyai.com/docs/reference#stream)*
     """
+    PREFIX="stream"
     def stream_raw(self, base64_raw_audio: str, format_text: bool = False, punctuate: bool = False) -> StreamPayload:
         """
         
         *[Reference](https://www.assemblyai.com/docs/reference#stream)*
         """
-        pass
+        self.parent.request(StreamEndpoint.PREFIX, data=base64_raw_audio)

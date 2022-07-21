@@ -65,6 +65,7 @@ class EntityType(str, Enum):
     drivers_license = "drivers_license"
     banking_information = "banking_information"
 
+@dataclass_json
 @dataclass
 class DetectedEntity:
     entityType: EntityType
@@ -72,6 +73,7 @@ class DetectedEntity:
     start: int
     end: int
 
+@dataclass_json
 @dataclass
 class SentimentAnalysisResult:
     """
@@ -84,6 +86,7 @@ class SentimentAnalysisResult:
     sentiment: Sentiment
     speaker: Optional[str]
 
+@dataclass_json
 @dataclass
 class UtteredWord:
     start: int
@@ -92,6 +95,7 @@ class UtteredWord:
     confidence: float
     speaker: Optional[str]
 
+@dataclass_json
 @dataclass
 class Utterance:
     start: int
@@ -101,6 +105,7 @@ class Utterance:
     speaker: Optional[str]
     words: List[UtteredWord]
 
+@dataclass_json
 @dataclass
 class Chapter:
     """
@@ -113,6 +118,7 @@ class Chapter:
     gist: str
     headline: str
 
+@dataclass_json
 @dataclass
 class CustomSpelling:
     """
@@ -122,16 +128,19 @@ class CustomSpelling:
     from_: List[str]
     to: str
 
+@dataclass_json
 @dataclass
 class ContentSafetyLabel:
     # TODO: https://www.assemblyai.com/docs/audio-intelligence#content-moderation # Interpreting Content Safety Detection Results
     status: str # "success" | "unavailable"
 
+@dataclass_json
 @dataclass
 class IABCategoryResult:
     # TODO: https://www.assemblyai.com/docs/audio-intelligence#topic-detection-iab-classification 
     status: str # "success" | "unavailable"
 
+@dataclass_json
 @dataclass
 class AutoHighlightResult:
     # TODO: https://www.assemblyai.com/docs/audio-intelligence#detect-important-phrases-and-words
@@ -144,7 +153,7 @@ class Transcript:
     
     *[Model Reference](https://www.assemblyai.com/docs/reference#transcript)*
     """
-    id: str
+    id: Optional[str] = None
     status: Optional[TranscriptStatus] = None
     audio_url: Optional[str] = None
     text: Optional[str] = None
@@ -170,6 +179,7 @@ class Transcript:
     sentiment_analysis: bool = False
     auto_chapters: bool = False
     entity_detection: bool = False
+    language_code: SupportedLanguageCode = SupportedLanguageCode.english_american
     words: List[UtteredWord] = field(default_factory=list)
     utterances: List[Utterance] = field(default_factory=list)
     auto_highlights_result: List[AutoHighlightResult] = field(default_factory=list)
@@ -181,8 +191,14 @@ class Transcript:
     iab_categories_result: List[IABCategoryResult] = field(default_factory=list)
     custom_spelling: List[CustomSpelling] = field(default_factory=list)
 
-    language_code: SupportedLanguageCode = SupportedLanguageCode.english_american
 
+    # Fields that are not present in the Transcript object document, but are returned from API methods.
+    resource_url : Optional[str] = None
+
+    ## UTC datetime strings
+    completed: Optional[str] = None
+    created: Optional[str] = None
+    
     def is_audio_intelligence_ready(self):
         """Returns True iff audio intelligence from AssemblyAI is ready to be used."""
         return self.status == TranscriptStatus.completed

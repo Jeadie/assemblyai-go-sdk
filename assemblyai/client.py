@@ -11,13 +11,10 @@ JSON_CONTENT_TYPE = "application/json"
 class Client:
     """Basic Client for AssemblyAI APIs"""
 
-    client: httpx.Client
-
     def __init__(self, api_key: str) -> None:
-        if client is None:
-            client = httpx.Client()
+        self.client = httpx.Client()
 
-        client.Headers =  httpx.Headers({
+        self.client.headers =  httpx.Headers({
             'authorization': api_key,
         })
         self.base_url = BASE_URL_V2
@@ -26,12 +23,12 @@ class Client:
         self.upload = UploadEndpoint(self)
         self.stream = StreamEndpoint(self)
 
-    def _parse_response(self, response: httpx.Response) -> Any:
+    def _parse_response(self, response: httpx.Response) -> httpx.Response:
         """Parses the response from a client request. Throws a httpx.HTTPStatusError if an error status code is returned."""
         response.raise_for_status()
-        return response.json()
+        return response
 
-    def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None, headers: Optional[Dict[str, str]]=None) -> Any:
+    def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None, headers: Optional[Dict[str, str]]=None) -> httpx.Response:
         """ Sends a JSON-encoded, HTTP request with required authorization to AssemblyAI api.
 
         Throws:
@@ -39,6 +36,8 @@ class Client:
             httpx.TimeoutException: If a timeout occured on the request.
         """
         request = self.client.build_request(method, f"{self.base_url}{path}", params=query, json=body, headers=headers)
+        print(request)
+        print(request.headers)
         response = self.client.send(request)
         return self._parse_response(response)
 
