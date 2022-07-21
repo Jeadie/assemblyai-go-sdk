@@ -1,10 +1,9 @@
 """AssemblyAI API endpoints"""
 
 import json
-from typing import Optional, List, TYPE_CHECKING
+from typing import Any, Optional, List, TYPE_CHECKING
 
 from datetime import date
-from venv import create
 
 from assemblyai.model import StreamPayload, Transcript, TranscriptStatus, Upload, UtteredWord
 
@@ -27,14 +26,18 @@ class TranscriptEndpoint(Endpoint):
     PREFIX="transcript"
 
     def create(self, transcript: Transcript) -> Transcript:
-        """
+        """ Create a new Transcript object.
+        
+        Results in AsssemblyAI running core transcription (and possibly audio intelligence) on the audio referenced.
+        Note: Maximum file size for audio is 10 hours.
         
         *[Reference](https://www.assemblyai.com/docs/reference#create-a-transcript)*
         """
-        return transcript
+        response =  self.parent.request("{TranscriptEndpoint.PREFIX}", "POST", body=transcript.to_json())
+        return Transcript.schema().loads(response)
 
     def get(self, transcript_id: str) -> Transcript:
-        """
+        """ Retrieve a specific transcript
         
         *[Reference](https://www.assemblyai.com/docs/reference#get-a-transcript)*
         """
@@ -42,7 +45,7 @@ class TranscriptEndpoint(Endpoint):
         return Transcript.schema().loads(response)
 
     def sentences(self, transcript_id: str) -> List[UtteredWord]:
-        """
+        """ Retrieve the sentences of a transcript.
         
         *[Reference](https://www.assemblyai.com/docs/reference#get-all-sentences-of-a-transcript)*
         """
@@ -50,7 +53,7 @@ class TranscriptEndpoint(Endpoint):
         return UtteredWord.schema().loads(response, many=True)
 
     def paragraphs(self, transcript_id: str) -> List[UtteredWord]:
-        """
+        """ Retrieve the paragraphs of a transcript.
         
         *[Reference](https://www.assemblyai.com/docs/reference#get-all-paragraphs-of-a-transcript)*
         """
@@ -58,14 +61,17 @@ class TranscriptEndpoint(Endpoint):
         return UtteredWord.schema().loads(response, many=True)
 
     def delete(self, transcript_id: str):
-        """
+        """ Delete a specific transcript.
+
+        Note: The record of the transcript will exist and remain queryable, however, all fields 
+        containing sensitive data (like text transcriptions) will be permanently deleted.
         
         *[Reference](https://www.assemblyai.com/docs/reference#delete-a-transcript)*
         """
         self.parent.request(f"{TranscriptEndpoint.PREFIX}/{transcript_id}", "DELETE")
 
     def all(self, limit: Optional[int] = None, status: Optional[TranscriptStatus] = None, created_on: Optional[date] = None, before_id: Optional[str]=None, after_id: Optional[str]=None, throttled_only: bool = False, first_page_only: bool = True) -> List[Transcript]:
-        """
+        """Retrieve all transcripts.
         
         *[Reference](https://www.assemblyai.com/docs/reference#get-all-transcripts)*
         """
@@ -95,6 +101,10 @@ class TranscriptEndpoint(Endpoint):
 
 
     def _all_next_url(self, response: any) -> Optional[str]:
+        """For a response from self.all(), retrieve the url for the next set of paginated results. 
+        
+        If None, no more results are present.
+        """
         resp_json = json.loads(response)
         if not resp_json.get("page_details"):
             return None
@@ -102,6 +112,7 @@ class TranscriptEndpoint(Endpoint):
         return resp_json["page_details"].get("next_url", None)
 
     def _parse_all_response(self, response: any) -> List[Transcript]:
+        """For a response from self.all(), parse all transcripts from this response."""
         resp_json = json.loads(response)
         if not resp_json.get("transcripts"):
             return []
