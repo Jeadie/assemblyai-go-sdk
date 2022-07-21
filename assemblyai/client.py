@@ -5,6 +5,8 @@ import httpx
 from assemblyai.api_endpoints import StreamEndpoint, TranscriptEndpoint, UploadEndpoint
 
 BASE_URL_V2 = "https://api.assemblyai.com/v2/"
+JSON_CONTENT_TYPE = "application/json"
+
 
 class Client:
     """Basic Client for AssemblyAI APIs"""
@@ -17,7 +19,6 @@ class Client:
 
         client.Headers =  httpx.Headers({
             'authorization': api_key,
-            'content-type': 'application/json'
         })
         self.base_url = BASE_URL_V2
 
@@ -25,36 +26,19 @@ class Client:
         self.upload = UploadEndpoint(self)
         self.stream = StreamEndpoint(self)
 
-
-    def _build_request(self, method: str, path: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None) -> httpx.Request:
-        """Build a request object for the client."""
-        return self.client.build_request(
-            method, path, params=query, json=self._clean_body(body),
-        )
-
-    def _clean_body(self, body: Optional[Dict[Any, Any]]) -> Optional[Dict[Any, Any]]:
-        """Cleans a json body of pythonic values and unnecessary keys."""
-        if not body:
-            return body
-
-        # Remove key-value with null values
-        body_items = filter(lambda x: x[1] is not None, body.items())
-
-        return dict(body_items)
-
     def _parse_response(self, response: httpx.Response) -> Any:
         """Parses the response from a client request. Throws a httpx.HTTPStatusError if an error status code is returned."""
         response.raise_for_status()
         return response.json()
 
-    def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None) -> Any:
+    def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None, headers: Optional[Dict[str, str]]=None) -> Any:
         """ Sends a JSON-encoded, HTTP request with required authorization to AssemblyAI api.
 
         Throws:
             httpx.HTTPStatusError: If the response was unsuccessful.
             httpx.TimeoutException: If a timeout occured on the request.
         """
-        request = self._build_request(method, f"{self.base_url}{path}", query, body)
+        request = self.client.build_request(method, f"{self.base_url}{path}", params=query, json=body, headers=headers)
         response = self.client.send(request)
         return self._parse_response(response)
 
