@@ -36,8 +36,6 @@ class Client:
             httpx.TimeoutException: If a timeout occured on the request.
         """
         request = self.client.build_request(method, f"{self.base_url}{path}", params=query, json=body, headers=headers)
-        print(request)
-        print(request.headers)
         response = self.client.send(request)
         return self._parse_response(response)
 

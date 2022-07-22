@@ -6,7 +6,7 @@ from datetime import date
 
 from httpx import Response
 
-from assemblyai.model import StreamPayload, Transcript, TranscriptStatus, Upload, UtteredWord
+from assemblyai.model import StreamPayload, Transcript, TranscriptStatus, Upload, Utterance, UtteredWord
 
 
 if TYPE_CHECKING:
@@ -34,17 +34,20 @@ class TranscriptEndpoint(Endpoint):
         
         *[Reference](https://www.assemblyai.com/docs/reference#create-a-transcript)*
         """
-        # TODO: enforce audio_url exists.
+        
+        if not transcript.audio_url:
+            raise ValueError("audio_url is required to create a Transcript")
+
         response = self._handle_request("", "POST", body=transcript.to_json())
-        return Transcript.schema().loads(response)
+        return Transcript.from_dict(response.json())
 
     def get(self, transcript_id: str) -> Transcript:
         """ Retrieve a specific transcript
         
         *[Reference](https://www.assemblyai.com/docs/reference#get-a-transcript)*
         """
-        response =  self._handle_request(transcript_id, "GET")
-        return Transcript.schema().loads(response)
+        response = self._handle_request(transcript_id, "GET")
+        return Transcript.from_dict(response.json())
 
     def sentences(self, transcript_id: str) -> List[UtteredWord]:
         """ Retrieve the sentences of a transcript.
@@ -52,15 +55,17 @@ class TranscriptEndpoint(Endpoint):
         *[Reference](https://www.assemblyai.com/docs/reference#get-all-sentences-of-a-transcript)*
         """
         response = self._handle_request(f"{transcript_id}/sentences", "GET")
-        return UtteredWord.schema().loads(response, many=True)
+        sentences = response.json().get("sentences", [])
+        return [UtteredWord.from_dict(u) for u in sentences]
 
-    def paragraphs(self, transcript_id: str) -> List[UtteredWord]:
+    def paragraphs(self, transcript_id: str) -> List[Utterance]:
         """ Retrieve the paragraphs of a transcript.
         
         *[Reference](https://www.assemblyai.com/docs/reference#get-all-paragraphs-of-a-transcript)*
         """
         response = self._handle_request(f"{transcript_id}/paragraphs", "GET")
-        return UtteredWord.schema().loads(response, many=True)
+        paragraphs = response.json().get("paragraphs", [])
+        return [Utterance.from_dict(u) for u in paragraphs]
 
     def delete(self, transcript_id: str):
         """ Delete a specific transcript.

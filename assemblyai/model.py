@@ -102,8 +102,9 @@ class Utterance:
     end: int
     text: str
     confidence: float
-    speaker: Optional[str]
-    words: List[UtteredWord]
+    # speaker: Optional[str]
+    words: List[UtteredWord] = field(default_factory=list)
+    # field(default_factory=list)
 
 @dataclass_json
 @dataclass
@@ -125,7 +126,7 @@ class CustomSpelling:
 
     [Reference](https://www.assemblyai.com/docs/core-transcription#custom-spelling)
     """
-    from_: List[str]
+    # from_: List[str]
     to: str
 
 @dataclass_json
@@ -161,7 +162,7 @@ class Transcript:
     audio_duration: Optional[float] = None
     punctuate: bool = False
     format_text: bool = False
-    dual_channel: bool = False
+    dual_channel: Optional[bool] = False
     webhook_url: Optional[str] = None
     webhook_status_code: Optional[str] = None
     audio_start_from: Optional[int] = None
@@ -182,14 +183,16 @@ class Transcript:
     language_code: SupportedLanguageCode = SupportedLanguageCode.english_american
     words: List[UtteredWord] = field(default_factory=list)
     utterances: List[Utterance] = field(default_factory=list)
-    auto_highlights_result: List[AutoHighlightResult] = field(default_factory=list)
-    redact_pii_policies: List[EntityType] = field(default_factory=list)
-    chapters: List[Chapter] = field(default_factory=list)
-    sentiment_analysis_results: List[SentimentAnalysisResult] = field(default_factory=list)
-    entities: List[DetectedEntity] = field(default_factory=list)
-    content_safety_labels: List[ContentSafetyLabel] = field(default_factory=list)
-    iab_categories_result: List[IABCategoryResult] = field(default_factory=list)
-    custom_spelling: List[CustomSpelling] = field(default_factory=list)
+
+    ## TODO: Add these back in. Currently these fields are correctly documented by AssemblyAI.
+    # auto_highlights_result: Optional[List[AutoHighlightResult]] = field(default_factory=list)
+    # redact_pii_policies: Optional[List[EntityType]] = field(default_factory=list)
+    # chapters: List[Chapter] = field(default_factory=list)
+    # sentiment_analysis_results: List[SentimentAnalysisResult] = field(default_factory=list)
+    # entities: List[DetectedEntity] = field(default_factory=list)
+    # content_safety_labels: List[ContentSafetyLabel] = field(default_factory=list)
+    # iab_categories_result: List[IABCategoryResult] = field(default_factory=list)
+    # custom_spelling: List[CustomSpelling] = field(default_factory=list)
 
 
     # Fields that are not present in the Transcript object document, but are returned from API methods.
@@ -222,4 +225,4 @@ class StreamPayload:
     status: TranscriptStatus
     confidence: float
     text: str
-    words: List[UtteredWord]
+    words: List[UtteredWord] = field(default_factory=list)
