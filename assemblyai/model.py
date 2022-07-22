@@ -206,6 +206,7 @@ class Transcript:
         """Returns True iff audio intelligence from AssemblyAI is ready to be used."""
         return self.status == TranscriptStatus.completed
 
+@dataclass_json
 @dataclass
 class Upload:
     """ Upload object.
@@ -214,7 +215,7 @@ class Upload:
     """
     upload_url: str
 
-
+@dataclass_json
 @dataclass
 class StreamPayload:
     """ Payload from stream operations.

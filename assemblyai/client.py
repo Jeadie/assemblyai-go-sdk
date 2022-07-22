@@ -28,14 +28,14 @@ class Client:
         response.raise_for_status()
         return response
 
-    def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None, headers: Optional[Dict[str, str]]=None) -> httpx.Response:
+    def request(self, path: str, method: str, query: Optional[Dict[Any, Any]] = None, data: Optional[Dict[Any, Any]] = None, body: Optional[Dict[Any, Any]] = None, headers: Optional[Dict[str, str]]=None) -> httpx.Response:
         """ Sends a JSON-encoded, HTTP request with required authorization to AssemblyAI api.
 
         Throws:
             httpx.HTTPStatusError: If the response was unsuccessful.
             httpx.TimeoutException: If a timeout occured on the request.
         """
-        request = self.client.build_request(method, f"{self.base_url}{path}", params=query, json=body, headers=headers)
+        request = self.client.build_request(method, f"{self.base_url}{path}", params=query, json=body, headers=headers, data=data)
         response = self.client.send(request)
         return self._parse_response(response)
 

@@ -165,7 +165,7 @@ class UploadEndpoint(Endpoint):
         *[Reference](https://www.assemblyai.com/docs/reference#creating-an-upload)*
         """
         response = self.parent.request(UploadEndpoint.PREFIX, "POST", data=content, headers={"Transfer-Encoding": "chunked"})
-        return Upload.schema().loads(response)
+        return Upload.from_dict(response.json())
 
     def upload_file(self, filename: str) -> Upload:
         """Upload file from raw audio to AssemblyAI servers.
