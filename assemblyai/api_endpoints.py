@@ -1,5 +1,6 @@
 """AssemblyAI API endpoints"""
 
+import codecs
 import json
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from datetime import date
@@ -18,6 +19,15 @@ class Endpoint:
     def __init__(self, parent: "Client") -> None:
         self.parent = parent
 
+
+    def _read_binary_file(self, filename, chunk_size=5242880):
+        """Reads data from a binary file in chunks."""
+        with open(filename, 'rb') as _file:
+            while True:
+                data = _file.read(chunk_size)
+                if not data:
+                    break
+                yield data
 
 class TranscriptEndpoint(Endpoint):
     """ API Operations related to the model.Transcript object.
@@ -176,25 +186,35 @@ class UploadEndpoint(Endpoint):
         """
         return self.upload_bytes(self._read_binary_file(filename))
 
-    def _read_binary_file(self, filename, chunk_size=5242880):
-        """Reads data from a binary file in chunks."""
-        with open(filename, 'rb') as _file:
-            while True:
-                data = _file.read(chunk_size)
-                if not data:
-                    break
-                yield data
-
 
 class StreamEndpoint(Endpoint):
-    """ API Operations related to the model.Stream object.
+    """ API Operations related to the model.Stream object. Stream raw audio for transcription.
 
+    NOTE: upload endpoint `v2/stream/` is not operation as per documentation.
+    
         *[Endpoint reference](https://www.assemblyai.com/docs/reference#stream)*
     """
     PREFIX="stream"
+
     def stream_raw(self, base64_raw_audio: str, format_text: bool = False, punctuate: bool = False) -> StreamPayload:
-        """
+        """ Stream raw audio to AssemblyAI for transcription.
         
+        Args:
+            format_text: add auto formatting of text
+            punctuate: add auto punctuation
+
         *[Reference](https://www.assemblyai.com/docs/reference#stream)*
         """
-        self.parent.request(StreamEndpoint.PREFIX, data=base64_raw_audio)
+        self.parent.request(StreamEndpoint.PREFIX, "POST", body={"audio_data": base64_raw_audio, "format_text": format_text, "punctuate": punctuate})
+
+    def stream_file(self, filename: str, format_text: bool = False, punctuate: bool = False) -> StreamPayload:
+        """ Stream raw audio, from a file, to AssemblyAI for transcription.
+
+        Args:
+            format_text: add auto formatting of text
+            punctuate: add auto punctuation
+
+        *[Reference](https://www.assemblyai.com/docs/reference#stream)*
+        """
+        raw_audio = self._read_binary_file(filename).__next__()
+        return self.stream_raw(str(codecs.encode(raw_audio, "base64")), format_text=format_text, punctuate=punctuate)
