@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 
 class TranscriptStatus(str, Enum):
     queued = "queued"
@@ -64,11 +64,18 @@ class EntityType(str, Enum):
     us_social_security_number = "us_social_security_number"
     drivers_license = "drivers_license"
     banking_information = "banking_information"
+    url = "url"
+
+@dataclass_json
+@dataclass
+class Timestamp:
+    start: int
+    end: int
 
 @dataclass_json
 @dataclass
 class DetectedEntity:
-    entityType: EntityType
+    entity_type: EntityType
     text: str
     start: int
     end: int
@@ -85,6 +92,7 @@ class SentimentAnalysisResult:
     end: int
     sentiment: Sentiment
     speaker: Optional[str]
+    confidence: float
 
 @dataclass_json
 @dataclass
@@ -102,7 +110,7 @@ class Utterance:
     end: int
     text: str
     confidence: float
-    # speaker: Optional[str]
+    speaker: Optional[str]
     words: List[UtteredWord] = field(default_factory=list)
     # field(default_factory=list)
 
@@ -134,18 +142,44 @@ class CustomSpelling:
 class ContentSafetyLabel:
     # TODO: https://www.assemblyai.com/docs/audio-intelligence#content-moderation # Interpreting Content Safety Detection Results
     status: str # "success" | "unavailable"
+    results: List = field(default_factory=list)
+    summary: Optional[Any] = None
+
+@dataclass_json
+@dataclass
+class IABCategoryLabel:
+    label: str
+    relevance: float
 
 @dataclass_json
 @dataclass
 class IABCategoryResult:
-    # TODO: https://www.assemblyai.com/docs/audio-intelligence#topic-detection-iab-classification 
-    status: str # "success" | "unavailable"
+    text: str
+    timestamp: Timestamp
+    labels: List[IABCategoryLabel] = field(default_factory=list)
 
 @dataclass_json
 @dataclass
-class AutoHighlightResult:
+class IABCategoryResults:
+    status: str # "success" | "unavailable"
+    summary: Dict[str, str]
+    results: List[IABCategoryResult]
+
+
+@dataclass_json
+@dataclass
+class AutoHighlight:
+    count: int
+    rank: float
+    # text: str
+    timestamps: List[Timestamp] = field(default_factory=list)
+
+@dataclass_json
+@dataclass
+class AutoHighlightResults:
     # TODO: https://www.assemblyai.com/docs/audio-intelligence#detect-important-phrases-and-words
     status: str # "success" | "unavailable"
+    results: List[AutoHighlight] = field(default_factory=list)
 
 @dataclass_json
 @dataclass
@@ -185,13 +219,13 @@ class Transcript:
     utterances: List[Utterance] = field(default_factory=list)
 
     ## TODO: Add these back in. Currently these fields are correctly documented by AssemblyAI.
-    # auto_highlights_result: Optional[List[AutoHighlightResult]] = field(default_factory=list)
+    auto_highlights_result: Optional[AutoHighlightResults] = field(default_factory=list)
     # redact_pii_policies: Optional[List[EntityType]] = field(default_factory=list)
-    # chapters: List[Chapter] = field(default_factory=list)
-    # sentiment_analysis_results: List[SentimentAnalysisResult] = field(default_factory=list)
-    # entities: List[DetectedEntity] = field(default_factory=list)
-    # content_safety_labels: List[ContentSafetyLabel] = field(default_factory=list)
-    # iab_categories_result: List[IABCategoryResult] = field(default_factory=list)
+    chapters: List[Chapter] = field(default_factory=list)
+    sentiment_analysis_results: List[SentimentAnalysisResult] = field(default_factory=list)
+    entities: List[DetectedEntity] = field(default_factory=list)
+    ##content_safety_labels: List[ContentSafetyLabel] = field(default_factory=list)
+    iab_categories_result: IABCategoryResults = field(default_factory=list)
     # custom_spelling: List[CustomSpelling] = field(default_factory=list)
 
 
