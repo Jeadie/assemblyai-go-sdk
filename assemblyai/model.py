@@ -171,7 +171,7 @@ class IABCategoryResults:
 class AutoHighlight:
     count: int
     rank: float
-    # text: str
+    text: str
     timestamps: List[Timestamp] = field(default_factory=list)
 
 @dataclass_json
